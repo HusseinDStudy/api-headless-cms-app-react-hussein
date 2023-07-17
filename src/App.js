@@ -2,8 +2,6 @@ import logo from './logo.svg';
 import './App.css';
 import React, { useState } from 'react';
 import axios from 'axios';
-import StripeCheckout from 'react-stripe-checkout';
-
 
 const App = () => {
   const [inputValue, setInputValue] = useState('');
@@ -17,7 +15,7 @@ const App = () => {
     try {
       const encodedAddress = encodeURIComponent(inputValue);
       const response = await axios.get(
-        `https://api-adresse.data.gouv.fr/search/?q=${encodedAddress}&type=housenumber&autocomplete=1`
+        `https://api-adresse.data.gouv.fr/search/?q=${encodedAddress}&type=&autocomplete=1`
       );
       setAddressData(response.data.features);
       console.log(response.data.features);
@@ -26,6 +24,25 @@ const App = () => {
     }
   };
   
+  const addToDatabase = async (address) => {
+    try{
+      axios.post("http://localhost:1337/api/addresses", {
+        data: {
+          label: address.properties.label,
+          street: address.properties.street,
+          city: address.properties.city,
+          postcode: address.properties.postcode,
+        },
+      }).then((response) => {
+        console.log(response);
+      }); 
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+  
+
   return (
     <div className="App">
       <header className="App-header">
@@ -54,6 +71,7 @@ const App = () => {
                 <th>Street</th>
                 <th>City</th>
                 <th>Postcode</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -63,17 +81,15 @@ const App = () => {
                   <td>{address.properties.street}</td>
                   <td>{address.properties.city}</td>
                   <td>{address.properties.postcode}</td>
+                  <td>
+                    <button onClick={() => addToDatabase(address)}>Add to Strapi</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-        {/* <StripeCheckout
-          token={handleToken}
-          stripeKey="YOUR_STRIPE_PUBLISHABLE_KEY"
-          amount={100} // Amount in cents ($1)
-          name="Payment Example"
-        /> */}
+       
       </div>
     </div>
   );
